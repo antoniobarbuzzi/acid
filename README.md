@@ -1,23 +1,62 @@
-ACID - Automatic Cluster Installation Driver
-==================
+# ACID - Automatic Cluster Installation Driver
 
-ACID is an open source tool for automatize installation of software on a cluster
-of machines. It is originally developed in order to install Apache Hadoop, but 
-it can be easily used to install everything.
 
-The whole installation process is managed by a ini configuration file (see the
+ACID is an open source tool to automatize the installation of software on a cluster.
+It is originally developed in order to install Apache Hadoop, but it can be easily
+used to install everything.
+
+## Description
+
+The whole installation process is managed by an INI configuration file (see the
 example included), that defines a set of 'Sections'.
 Each section is managed by a specific handler (for example, [RSYNC] section is
 managed by RsyncHandler).
-The installation is managed my a series of subsections, that defines what to do.
-For example, each subsection of RSYNC have the source and destination path for rsync.
+Each Section contains one or more Subsections, which are executed by the handler of the
+parent Section. The subsections contain the configuration for the handler.
 
 The subsection configurations are handler specific, except for "depends" and "machines":
+
  - "machines" defines the list of machine where the subsection should be executed
  - "depends" defines the list of dependencies.
 
 ACID creates a list of subsections to execute in order to satisfy all the dependencies
 declared in the configuration file, and execute the remote 
+
+
+Example:
+
+    machines = file:///home/antonio/machine-list.txt
+    [SCRIPT]
+        [[INIT]]
+        machine = %s(machines)s
+        depends = RSYNC:HADOOP, RSYNC:HBASE
+        script = /home/antonio/finalize.sh
+
+    [RSYNC]
+        [[HADOOP]]
+        machine = %s(machines)s
+        source_dir = /home/antonio/hadoop-0.20.203.0/
+        remote_dir = /home/hadoop/hadoop/
+        
+        [[HBASE]]
+        machine = %s(machines)s
+        source_dir = /home/antonio/hbase/
+        remote_dir = /home/hadoop/hbase/
+    
+
+
+The previous configuration file contains two sections, RSYNC and SCRIPT.
+RSYNC contains two subsections, each of them is passed to the RsyncHandler that, as 
+it is presumable, copies the source_dir to the remote_dir on all the machines.
+
+### Dependencies
+ACID works like Ant or Make: each subsection corresponds to an Ant's target, and has a
+list of all the sections that have to be executed before it.
+
+In the previous example, ACID executes in order RSYNC:HADOOP and RSYNC:HBASE, and, after their completion, SCRIPT:INIT
+    
+   
+
 
 Quick start
 -----------
@@ -37,22 +76,6 @@ Then create a configuration file (look at the example configuration) and execute
 In order to execute a specific subsection:
     
     python acid.py --config configuration.ini --subsection RSYNC:HADOOP_CONFIGURATION
-
-
-Dependencies
------------
-ACID works like Ant or Make: each subsection corresponds to an Ant's target, and has a
-list of all the sections that have to be executed before it.
-
-In the following example, ACID execute first COPY_PROGRAM and after its completion, COPY_CONF
-    
-    [RSYNC]
-        [[COPY_PROGRAM]]
-        depends = 
-        ... 
-        
-        [[COPY_CONF]]
-        depends = RSYNC:COPY_PROGRAM
 
 
 Handlers
