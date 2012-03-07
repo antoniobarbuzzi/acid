@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-__author__ = "Antonio Barbuzzi"
-__copyright__ = "Copyright (C) 2012 Antonio Barbuzzi"
-__license__ = "GPLv3"
-__version__ = "0.1"
-
-﻿from __future__ import with_statement
+# -*- coding: utf-8 -*-
+from __future__ import with_statement
 from fabric.api import *
 from fabric.utils import warn
 from fabric.contrib.files import exists
@@ -14,6 +10,12 @@ import socket
 import hashlib
 
 from memoize import memoized
+
+
+__author__ = "Antonio Barbuzzi"
+__copyright__ = "Copyright (C) 2012 Antonio Barbuzzi"
+__license__ = "GPLv3"
+__version__ = "0.1"
 
 def mayfailrun(cmd, *args, **kwargs):
     with settings(warn_only=True):

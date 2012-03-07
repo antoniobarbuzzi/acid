@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 __author__ = "Antonio Barbuzzi"
 __copyright__ = "Copyright (C) 2012 Antonio Barbuzzi"
 __license__ = "GPLv3"
 __version__ = "0.1"
 
-﻿#from fabric.api import run, env
+#from fabric.api import run, env
 from fabric.api import *
 from fabric.decorators import with_settings
 from fabric.context_managers import cd

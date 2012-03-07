@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """engine.py: ACID. """
 __author__ = "Antonio Barbuzzi"
 __copyright__ = "Copyright (C) 2012 Antonio Barbuzzi"
