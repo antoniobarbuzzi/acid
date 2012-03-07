@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+"""engine.py: ACID. """
+__author__ = "Antonio Barbuzzi"
+__copyright__ = "Copyright (C) 2012 Antonio Barbuzzi"
+__license__ = "GPLv3"
+__version__ = "0.1"
+
 import networkx as nx
 import configobj
 from handlers import *
