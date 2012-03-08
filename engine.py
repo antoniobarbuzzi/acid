@@ -91,7 +91,6 @@ class Engine():
         
         for edge in edges:
             if not edge[0] in DG: # edge[1] is thisnode and we have it in the configuration file for sure
-                print edge[0]
                 raise InvalidDependencyException("%s:%s in section %s:%s" % (edge[0][0], edge[0][1], edge[1][0], edge[1][1]))
             else:
                 DG.add_edge(*edge)
