@@ -24,26 +24,26 @@ declared in the configuration file, and execute the remote
 
 Let's clarify everything with an example.
 ## Example
+```ini
+machines = file:///home/antonio/machine-list.txt
+[SCRIPT]
+    [[INIT]]
+    machine = %s(machines)s
+    depends = RSYNC:HADOOP, RSYNC:HBASE
+    script = /home/antonio/finalize.sh
 
-    machines = file:///home/antonio/machine-list.txt
-    [SCRIPT]
-        [[INIT]]
-        machine = %s(machines)s
-        depends = RSYNC:HADOOP, RSYNC:HBASE
-        script = /home/antonio/finalize.sh
-
-    [RSYNC]
-        [[HADOOP]]
-        machine = %s(machines)s
-        source_dir = /home/antonio/hadoop-0.20.203.0/
-        remote_dir = /home/hadoop/hadoop/
-        
-        [[HBASE]]
-        machine = %s(machines)s
-        depends = RSYNC:HADOOP
-        source_dir = /home/antonio/hbase/
-        remote_dir = /home/hadoop/hbase/
-
+[RSYNC]
+    [[HADOOP]]
+    machine = %s(machines)s
+    source_dir = /home/antonio/hadoop-0.20.203.0/
+    remote_dir = /home/hadoop/hadoop/
+    
+    [[HBASE]]
+    machine = %s(machines)s
+    depends = RSYNC:HADOOP
+    source_dir = /home/antonio/hbase/
+    remote_dir = /home/hadoop/hbase/
+```
 The example configuration file contains two *Sections*, **RSYNC** and **SCRIPT**.
 **RSYNC** contains two subsections, each of them is passed to the *RsyncHandler* that (as 
 it is presumable) copies the *source_dir* to the *remote_dir* on all the machines.
@@ -58,36 +58,46 @@ which depends on both *RSYNC:HBASE* and *RSYNC:HADOOP*
     
 
 ## Quick start
-1. Install all the dependencies:
-   - fabric
-   - networkx
-   It is suggested to use the lastest version of fabric from github, that supports the parallel execution of tasks.
+-  Install all the dependencies:
+   - `fabric` (get the latest version from github, which supports the parallel execution of tasks)
+   - `networkx`
 
-2. In order to run parallely, you need to create an ssh key and copy it on the remote machine.
+-  In order to run parallely, you need to create an ssh key and copy it on the remote machine.
 
-3. *(A)* Create a configuration file (look at the example configuration) and execute *acid.py*:
-    
-        python acid.py --config configuration.ini --all
+```bash
+   $ ssh-keygen
+   $ ssh-copy-id -i ~/.ssh/ssh_key.pub user@remotehost
+```
 
-4. *(B)* In order to execute a specific subsection:
-    
-        python acid.py --config configuration.ini --subsection RSYNC:HADOOP_CONFIGURATION
+-  Create a configuration file (look at the example configuration)
+
+-  Execute *acid.py*:
+
+```bash
+   $ python acid.py --config configuration.ini --all
+```
+
+-  In order to execute a specific subsection:
+
+```bash
+   $ python acid.py --config configuration.ini --subsection RSYNC:HADOOP_CONFIGURATION
+```
 
 
 ## Handlers
 For the time being there are only a few handlers:
 
- - **GitHandler**: clone a GIT project in a remote directory
- - **UserHandler**: create a user
- - **ScriptHandler**: execute a script on the remote hosts
- - **PackageHandler**: install a list of packages on the remote hosts
- - **RsyncHandler**: copy, using rsync, a local directory to a remote one
+ - `GitHandler`: clone a GIT project in a remote directory
+ - `UserHandler`: create a user
+ - `ScriptHandler`: execute a script on the remote hosts
+ - `PackageHandler`: install a list of packages on the remote hosts
+ - `RsyncHandler`: copy, using rsync, a local directory to a remote one
 
 Defining a new handler is foolproof: just create a new class that inheriths from
-*AbstractHandler* and define a *runtask* method. The *runtask* method is the task that is
+`AbstractHandler` and define a *runtask* method. The *runtask* method is the task that is
 executed on a remote host.
 
-ACID uses fabric (http://fabfile.org/) in order to execute the remote tasks.
+ACID uses *fabric* (http://fabfile.org/) in order to execute the remote tasks.
 
 
 Contributing
