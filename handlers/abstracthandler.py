@@ -40,9 +40,9 @@ class AbstractHandler(object):
         self.dry_run = dry_run
         
     @lru_cache(maxsize=20)
-    def get_machines(self, url):
+    def get_machines(self, uri):
         machines = []
-        for line in urllib.urlopen(url):
+        for line in urllib.urlopen(uri):
             line = line.strip()
             if line and not line.startswith("#"):
                 machines.append(line)
@@ -50,8 +50,7 @@ class AbstractHandler(object):
 
     def validate_conf(self, subsection_name, subsection_conf):
         # Override this
-        machines = subsection_conf["machines"]
-        self.get_machines(machines)
+        self.get_machines(subsection_conf["machines"])
     
     def validate_configuration(self, option, value):
         # Do not ovverride

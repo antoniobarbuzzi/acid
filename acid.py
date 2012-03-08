@@ -65,7 +65,7 @@ def run():
                 engine.execute_section(sec)
         elif args.subsections:
             for subsec in args.subsections:
-                engine.execute_target(subsec)
+                engine.execute_subsection(subsec)
         else:
             assert(False)
     except HandlerNotFoundException, e:

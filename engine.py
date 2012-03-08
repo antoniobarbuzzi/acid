@@ -29,18 +29,17 @@ class CyclicDependenciesException(Exception):
     def __str__(self):
         return "Graph is cyclic - Topological sorting is meaningful only for directed acyclic graphs. "
 
-class ConfigurationNotFoundException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
 class InvalidSubsectionException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
+class InvalidDependencyException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 
 class Engine():
@@ -73,8 +72,8 @@ class Engine():
 
     def __construct_graph(self):
         DG = nx.DiGraph()
-        conf = self.conf
-        
+        conf = self.conf        
+        edges = set()
         for section in conf.sections:
             for subsection in conf[section].sections:
                 thisnode = (section, subsection)
@@ -88,7 +87,14 @@ class Engine():
                 else:
                     deps = []
                 for node in deps:
-                    DG.add_edge(node, thisnode)
+                    edges.add((node, thisnode))
+        
+        for edge in edges:
+            if not edge[0] in DG: # edge[1] is thisnode and we have it in the configuration file for sure
+                print edge[0]
+                raise InvalidDependencyException("%s:%s in section %s:%s" % (edge[0][0], edge[0][1], edge[1][0], edge[1][1]))
+            else:
+                DG.add_edge(*edge)
         return DG
 
     def print_conf(self):
@@ -121,25 +127,25 @@ class Engine():
     
     def execute_all(self):
         for section, subsection in self.run_order:
-            self.__execute_target(section, subsection)
+            self.__execute_subsection(section, subsection)
 
     def execute_section(self, section_name):
         done = False
         for section, subsection in self.run_order:
             if section == section_name:
                 done = True
-                self.__execute_target(section, subsection)
+                self.__execute_subsection(section, subsection)
         if not done:
             raise HandlerNotFoundException(section_name)
     
-    def execute_target(self, targetname):
+    def execute_subsection(self, subsection_full_name):
         try:
-            section, subsection = targetname.split(":")
+            section, subsection = subsection_full_name.split(":")
         except ValueError, e:
-            raise InvalidSubsectionException(targetname)
-        self.__execute_target(section, subsection)
+            raise InvalidSubsectionException(subsection_full_name)
+        self.__execute_subsection(section, subsection)
     
-    def __execute_target(self, section, subsection):
+    def __execute_subsection(self, section, subsection):
         handler = self.__get_handler(section)
         if not self.conf[section].has_key(subsection): # I'm sure that conf[section] exists, otherwise __get_handler would have thrown an exeception
             raise ConfigurationNotFoundException("%s:%s" % (section, subsection))
