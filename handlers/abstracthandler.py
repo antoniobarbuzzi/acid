@@ -24,7 +24,7 @@ def setup_fabric():
     fabric.state.env.parallel = True
     #fabric.state.env.deploy_user='hadoop' #FIXME
     fabric.state.output.debug = False
-    fabric.state.output.running = False
+    fabric.state.output.running = True
 
 setup_fabric()
 
