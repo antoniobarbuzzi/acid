@@ -5,6 +5,9 @@ import configobj
 from handlers import *
 from handlers.abstracthandler import *
 import getpass
+import tempfile
+import subprocess
+import shutil
 
 test_conf = """
 [TEST]
@@ -17,10 +20,10 @@ test_conf = """
 rsync_conf = """
 [RSYNC]
     [[A]]
-    machines = /tmp/localhost
+    machines = {tmpfile}
     user = %s
     source_dir = ../tests
-    remote_dir = /tmp/test
+    remote_dir = {tmpdir}/
 """ % (getpass.getuser())
 
 script_conf = """
@@ -44,14 +47,30 @@ class TestHandlers(unittest.TestCase):
             ah.validate_configuration(sub, conf["TEST"][sub])
     
     
-    def test_rsynchandler(self):
+    def test_rsynchandler(self):        
+        tmpfile = tempfile.mkstemp(suffix="acidtest")[1]
+        tmpdir = tempfile.mkdtemp(suffix="acidtest")
         rh = RsyncHandler()
-        conf = configobj.ConfigObj(StringIO(rsync_conf))
-        with open("/tmp/localhost", "w") as f:
+        c = rsync_conf.format(tmpfile=tmpfile, tmpdir=tmpdir)
+        print c
+        conf = configobj.ConfigObj(StringIO(c))
+        
+        with open(tmpfile, "w") as f:
             f.write("localhost\n")
         for sub in conf["RSYNC"]:
             rh.execute(sub, conf[rh.section_name][sub])
             rh.validate_configuration(sub, conf[rh.section_name][sub])
+        ret = subprocess.call(["diff", "-rq", "../tests", tmpdir])
+        self.assertEqual(ret, 0)
+        for sub in conf["RSYNC"]:
+            rh.execute(sub, conf[rh.section_name][sub])
+            rh.validate_configuration(sub, conf[rh.section_name][sub])
+        ret = subprocess.call(["diff", "-rq", "../tests", tmpdir])
+        self.assertEqual(ret, 0)
+        
+        os.remove(tmpfile)
+        shutil.rmtree(tmpdir)
+        
     
     def test_scripthandler(self):
         sh = ScriptHandler()
