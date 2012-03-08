@@ -45,9 +45,9 @@ class InvalidSubsectionException(Exception):
 
 class Engine():
     def __init__(self, infile):        
-        self.conf = configobj.ConfigObj(infile)        
+        self.conf = configobj.ConfigObj(infile, file_error=True, list_values=True, create_empty=False, interpolation=True)
         self.__handlers__ = {}
-        DG = self._construct_graph()
+        DG = self.__construct_graph()
         if not nx.is_directed_acyclic_graph(DG):
             raise CyclicDependenciesException() #FIXME Add cycle list
         self.run_order = nx.topological_sort(DG)
@@ -71,7 +71,7 @@ class Engine():
 
         return correct
 
-    def _construct_graph(self):
+    def __construct_graph(self):
         DG = nx.DiGraph()
         conf = self.conf
         
@@ -145,7 +145,7 @@ class Engine():
             raise ConfigurationNotFoundException("%s:%s" % (section, subsection))
         conf = self.conf[section][subsection]
         print "Executing [%s:%s]" % (section, subsection)
-        handler.execute_target(section, subsection, conf)
+        handler.execute(subsection, conf)
 
     def __get_handler(self, section_name):
         if self.__handlers__.has_key(section_name):

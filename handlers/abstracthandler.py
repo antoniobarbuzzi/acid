@@ -48,31 +48,33 @@ class AbstractHandler(object):
                 machines.append(line)
         return machines
 
-    def validate_conf(self, name, confsection):
-        machines = confsection["machines"]
+    def validate_conf(self, subsection_name, subsection_conf):
+        # Override this
+        machines = subsection_conf["machines"]
         self.get_machines(machines)
     
     def validate_configuration(self, option, value):
+        # Do not ovverride
         AbstractHandler.validate_conf(self, option, value)
         self.validate_conf(option, value)
     
-    def execute_target(self, section_name, subsection_name, subection_conf):
-        if isinstance(subection_conf, configobj.Section):
-            self.init(subsection_name, subection_conf)
-            runtask = functools.partial(self.runtask, subsection_name, subection_conf)
-            runtask.name = "%s:%s" % (section_name, subsection_name)
-            fabric.tasks.execute(runtask, hosts=self.get_machines(subection_conf["machines"]))
-            self.close(subsection_name, subection_conf)
+    def execute(self, subsection_name, subsection_conf):
+        if isinstance(subsection_conf, configobj.Section):
+            self.init(subsection_name, subsection_conf)
+            runtask = functools.partial(self.runtask, subsection_name, subsection_conf)
+            runtask.name = "%s:%s" % (self.section_name, subsection_name)
+            fabric.tasks.execute(runtask, hosts=self.get_machines(subsection_conf["machines"]))
+            self.close(subsection_name, subsection_conf)
         else:
-            raise InvalidConfigurationFile("Cannot use '%s = %s'" % (subsection_name, subection_conf))
+            raise InvalidConfigurationFile("Cannot use '%s = %s'" % (subsection_name, subsection_conf))
 
-    def init(self, option, value):
+    def init(self, subsection_name, confsection):
         pass
     
-    def runtask(self, option, value):
-        raise NotImplemented()
+    def runtask(self, subsection_name, confsection):
+        raise NotImplementedError("Subclasses should implement this!")
     
-    def close(self, option, value):
+    def close(self, subsection_name, confsection):
         pass
 
 
