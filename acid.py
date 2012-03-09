@@ -12,6 +12,7 @@ import argparse
 from engine import *
 from handlers import *
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Automatic Cluster Installation Driver', epilog="For further informations, read the README file.")
     parser.add_argument('-v', '--verbose', action='store_true', help="Verbose")
@@ -71,8 +72,8 @@ def run():
     except HandlerNotFoundException, e:
         print "Handler for section %s not found" % e
         sys.exit(1)
-    except ConfigurationNotFoundException, e:
-        print "Configuration not found for target %s" % e
+    except InvalidSubsectionException, e:
+        print "Configuration not found for subsection %s" % e
         sys.exit(1)
     except InvalidSubsectionException, e:
         print "Invalid target %s" % e

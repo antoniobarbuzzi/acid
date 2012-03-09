@@ -147,7 +147,7 @@ class Engine():
     def __execute_subsection(self, section, subsection):
         handler = self.__get_handler(section)
         if not self.conf[section].has_key(subsection): # I'm sure that conf[section] exists, otherwise __get_handler would have thrown an exeception
-            raise ConfigurationNotFoundException("%s:%s" % (section, subsection))
+            raise InvalidSubsectionException("%s:%s" % (section, subsection))
         conf = self.conf[section][subsection]
         print "Executing [%s:%s]" % (section, subsection)
         handler.execute(subsection, conf)
