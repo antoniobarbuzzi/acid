@@ -15,7 +15,7 @@ from handlers import *
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Automatic Cluster Installation Driver', epilog="For further informations, read the README file.")
-    parser.add_argument('-v', '--verbose', action='store_true', help="Verbose")
+    parser.add_argument('-v', '--verbose', action='store_true', help="Verbose - Show Fabric output, otherwise hidden")
     parser.add_argument('-c', '--config', default="config.ini", help="Read the configuration from the specified configuration file (default=config.ini)")
     parser.add_argument('--dry-run', action='store_true', help="Run the engine without really executing the script")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -28,12 +28,12 @@ def parse_arguments():
 def run():
     args = parse_arguments()
     try:
-        engine = Engine(args.config)
-        engine.add_handler(RsyncHandler(args.dry_run))
-        engine.add_handler(GitHandler(args.dry_run))
-        engine.add_handler(UserHandler(args.dry_run))
-        engine.add_handler(ScriptHandler(args.dry_run))
-        engine.add_handler(PackageHandler(args.dry_run))
+        engine = Engine(args.config, args.verbose)
+        engine.add_handler(RsyncHandler(args.verbose, args.dry_run))
+        engine.add_handler(GitHandler(args.verbose, args.dry_run))
+        engine.add_handler(UserHandler(args.verbose, args.dry_run))
+        engine.add_handler(ScriptHandler(args.verbose, args.dry_run))
+        engine.add_handler(PackageHandler(args.verbose, args.dry_run))
         #engine.add_handler(NullHandler("RSYNC"))
         #engine.add_handler(PrintHandler("GIT"))
         #engine.add_handler(NullHandler("GIT"))

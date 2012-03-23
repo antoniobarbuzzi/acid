@@ -43,13 +43,14 @@ class InvalidDependencyException(Exception):
 
 
 class Engine():
-    def __init__(self, infile):        
+    def __init__(self, infile, verbose=False):
         self.conf = configobj.ConfigObj(infile, file_error=True, list_values=True, create_empty=False, interpolation=True)
         self.__handlers__ = {}
         DG = self.__construct_graph()
         if not nx.is_directed_acyclic_graph(DG):
             raise CyclicDependenciesException() #FIXME Add cycle list
         self.run_order = nx.topological_sort(DG)
+        self.verbose = verbose
         #print "Run Order:", self.run_order
     
     def validate_configuration(self):

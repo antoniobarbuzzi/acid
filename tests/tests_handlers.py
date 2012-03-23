@@ -37,7 +37,7 @@ script_conf = """
 class TestHandlers(unittest.TestCase):
     
     def test_abstracthandler(self):
-        ah = AbstractHandler("TEST", False)
+        ah = AbstractHandler("TEST", verbose=False, dry_run=False)
         conf = configobj.ConfigObj(StringIO(test_conf))
         def runtask(*args, **kwargs):
             pass

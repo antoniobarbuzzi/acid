@@ -42,6 +42,7 @@ def aptkey(keyID, localFilename):
 class hostUp(object):    
     def __init__(self, f):
         self.f = f
+        self.unreachable_machines = []
     
     def is_host_up(self, host, port):
         # Set the timeout
@@ -61,6 +62,7 @@ class hostUp(object):
     def __call__(self, *args, **kwargs):
         if self.is_host_up(env.host, int(env.port)) is False:
             warn('Host {host} on port {port} is down - Not calling "{func}" for it'.format(host=env.host, port=env.port, func=self.f.__name__))
+            self.unreachable_machines.append((env.host, env.port))
         else:
             self.f(*args, **kwargs)
 

@@ -9,8 +9,8 @@ import abstracthandler
 from fabric_libs.fab_utils import adduser
 
 class UserHandler(abstracthandler.AbstractHandler):
-    def __init__(self, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="USERS", dry_run=dry_run)
+    def __init__(self, verbose=False, dry_run=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="USERS", verbose=verbose, dry_run=dry_run)
     
     def validate_conf(self, name, confsection):
         user=confsection["user"]

@@ -10,8 +10,8 @@ import abstracthandler
 from fabric_libs.fab_gitconf import GitConf
 
 class GitHandler(abstracthandler.AbstractHandler):
-    def __init__(self, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="GIT", dry_run=dry_run)
+    def __init__(self, verbose=False, dry_run=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="GIT", verbose=verbose, dry_run=dry_run)
     
     def validate_conf(self, name, confsection):
         remote_user = confsection["user"]

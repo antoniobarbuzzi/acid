@@ -12,12 +12,15 @@ import fabric.api
 
 
 class ScriptHandler(abstracthandler.AbstractHandler):
-    def __init__(self, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="SCRIPT", dry_run=dry_run)
+    def __init__(self, verbose=False, dry_run=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="SCRIPT", verbose=verbose, dry_run=dry_run)
     
     def validate_conf(self, name, confsection):
         user = confsection["user"]
         script = confsection["script"]
+        if not os.path.exists(script):
+            raise abstracthandler.InvalidConfigurationFile("Script '%s' does not exist" % script)
+        
 
     
     def runtask(self, name, confsection):
