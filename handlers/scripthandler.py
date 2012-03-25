@@ -12,8 +12,8 @@ import fabric.api
 
 
 class ScriptHandler(abstracthandler.AbstractHandler):
-    def __init__(self, verbose=False, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="SCRIPT", verbose=verbose, dry_run=dry_run)
+    def __init__(self, verbose=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="SCRIPT", verbose=verbose)
     
     def validate_conf(self, name, confsection):
         user = confsection["user"]
@@ -29,7 +29,6 @@ class ScriptHandler(abstracthandler.AbstractHandler):
         remote_script = "/tmp/" + os.path.basename(script)
         #f = urllib.urlopen(script_url)
         with fabric.api.settings(user=user):
-            if not self.dry_run:
-                fabric.api.put(script, remote_script)
-                fabric.api.run("chmod +x %s" % remote_script)
-                fabric.api.run(remote_script)
+            fabric.api.put(script, remote_script)
+            fabric.api.run("chmod +x %s" % remote_script)
+            fabric.api.run(remote_script)

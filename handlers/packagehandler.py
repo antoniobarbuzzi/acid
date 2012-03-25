@@ -10,8 +10,8 @@ import fabric.api
 import fabric_libs.fab_utils
 
 class PackageHandler(abstracthandler.AbstractHandler):
-    def __init__(self, verbose=False, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="PACKAGES", verbose=verbose, dry_run=dry_run)
+    def __init__(self, verbose=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="PACKAGES", verbose=verbose)
     
     def validate_conf(self, name, confsection):
         pkgs = confsection.as_list("packages_list")
@@ -20,5 +20,4 @@ class PackageHandler(abstracthandler.AbstractHandler):
         pkgs = confsection.as_list("packages_list")
         with fabric.api.settings(user="root"):
             for pkg in pkgs:
-                if not self.dry_run:
-                    fabric_libs.fab_utils.installPackage(pkg)
+                fabric_libs.fab_utils.installPackage(pkg)

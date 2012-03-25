@@ -52,9 +52,8 @@ class HandlerExecutionError(Exception):
         return repr(self.value)
 
 class AbstractHandler(object):
-    def __init__(self, section_name, verbose, dry_run):
+    def __init__(self, section_name, verbose):
         self.section_name = section_name
-        self.dry_run = dry_run
         self.verbose = verbose
     
     @lru_cache(maxsize=20)
@@ -90,6 +89,9 @@ class AbstractHandler(object):
     
     def execute(self, subsection_name, subsection_conf):
         if isinstance(subsection_conf, configobj.Section):
+            if not subsection_conf.has_key("machines"):
+                print "EXCEPTION --->", subsection_name, subsection_conf
+                raise Exception("%sEHHHHHHH?!?!?!?!" % subsection_name)#FIXME
             self.init(subsection_name, subsection_conf)
             runtask = functools.partial(self.runtask, subsection_name, subsection_conf)
             runtask = hostUp(runtask)
@@ -114,7 +116,7 @@ class AbstractHandler(object):
                 sys.stderr = stderr
                 self.close(subsection_name, subsection_conf)
                 for host, port in runtask.unreachable_machines:
-                    print 'Host {host} on port {port} is down'.format(host=env.host, port=env.port)
+                    print 'Host {host} on port {port} is down'.format(host=host, port=port)
         else:
             raise InvalidConfigurationFile("Cannot use '%s = %s'" % (subsection_name, subsection_conf))
 

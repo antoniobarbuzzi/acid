@@ -28,12 +28,12 @@ def parse_arguments():
 def run():
     args = parse_arguments()
     try:
-        engine = Engine(args.config, args.verbose)
-        engine.add_handler(RsyncHandler(args.verbose, args.dry_run))
-        engine.add_handler(GitHandler(args.verbose, args.dry_run))
-        engine.add_handler(UserHandler(args.verbose, args.dry_run))
-        engine.add_handler(ScriptHandler(args.verbose, args.dry_run))
-        engine.add_handler(PackageHandler(args.verbose, args.dry_run))
+        engine = Engine(args.config, args.verbose, args.dry_run)
+        engine.add_handler(RsyncHandler(args.verbose))
+        engine.add_handler(GitHandler(args.verbose))
+        engine.add_handler(UserHandler(args.verbose))
+        engine.add_handler(ScriptHandler(args.verbose))
+        engine.add_handler(PackageHandler(args.verbose))
         #engine.add_handler(NullHandler("RSYNC"))
         #engine.add_handler(PrintHandler("GIT"))
         #engine.add_handler(NullHandler("GIT"))
@@ -52,9 +52,9 @@ def run():
     if args.verbose:
         engine.print_conf()
     
-    if not engine.validate_configuration():
-        print "Invalid Configuration"
-        sys.exit(1)
+    #if not engine.validate_configuration():
+        #print "Invalid Configuration"
+        #sys.exit(1)
     if args.validate:
         sys.exit(0)
     

@@ -10,8 +10,8 @@ import abstracthandler
 from fabric_libs.fab_gitconf import GitConf
 
 class GitHandler(abstracthandler.AbstractHandler):
-    def __init__(self, verbose=False, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="GIT", verbose=verbose, dry_run=dry_run)
+    def __init__(self, verbose=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="GIT", verbose=verbose)
     
     def validate_conf(self, name, confsection):
         remote_user = confsection["user"]
@@ -33,7 +33,7 @@ class GitHandler(abstracthandler.AbstractHandler):
         gitpassword = confsection["gitpassword"] or None        
         ssh_key = confsection["ssh_key"]
         ssh_cert = confsection["ssh_cert"]
-        if not self.dry_run:
-            gitconf = GitConf(repository_url, remote_dir, remote_user=remote_user, branch=branch, gitusername=gitusername, gitpassword=gitpassword)    
-            gitconf.propagateKey(ssh_key, ssh_cert)
-            gitconf.configure()
+        
+        gitconf = GitConf(repository_url, remote_dir, remote_user=remote_user, branch=branch, gitusername=gitusername, gitpassword=gitpassword)    
+        gitconf.propagateKey(ssh_key, ssh_cert)
+        gitconf.configure()

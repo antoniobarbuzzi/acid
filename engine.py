@@ -40,18 +40,40 @@ class InvalidDependencyException(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
+        
+class RecursiveSection(configobj.Section):
+    def __init__(self, section):
+        configobj.Section.__init__(self, section.parent, section.depth, section.main, section, section.name)
+    
+    def __getitem__(self, key):
+        if key == "handlers" or self.parent == self or dict(self).has_key(key):
+            return configobj.Section.__getitem__(self, key)
+        else:
+            return RecursiveSection.__getitem__(RecursiveSection(self.parent), key)
+    
+    def has_key(self, key):
+        try:
+            self.__getitem__(key)
+        except:
+            return False
+        else:
+            return True
 
 
 class Engine():
-    def __init__(self, infile, verbose=False):
+    def __init__(self, infile, verbose=False, dry_run=False):
+        self.infile = infile
+        self.verbose = verbose
+        self.dry_run = dry_run
+        
         self.conf = configobj.ConfigObj(infile, file_error=True, list_values=True, create_empty=False, interpolation=True)
         self.__handlers__ = {}
-        DG = self.__construct_graph()
-        if not nx.is_directed_acyclic_graph(DG):
+        self.__sections_to_stringhandlers = {}
+        self.DG = self.__construct_graph()
+        if not nx.is_directed_acyclic_graph(self.DG):
             raise CyclicDependenciesException() #FIXME Add cycle list
-        self.run_order = nx.topological_sort(DG)
-        self.verbose = verbose
-        #print "Run Order:", self.run_order
+        self.run_order = nx.topological_sort(self.DG)
+        
     
     def validate_configuration(self):
         correct = True
@@ -72,31 +94,69 @@ class Engine():
         return correct
 
     def __construct_graph(self):
-        DG = nx.DiGraph()
-        conf = self.conf        
+        DG = nx.DiGraph()     
         edges = set()
-        for section in conf.sections:
-            for subsection in conf[section].sections:
-                thisnode = (section, subsection)
-                DG.add_node(thisnode)
-                if conf[section][subsection].has_key("depends"):
-                    dep_str = conf[section][subsection].as_list("depends")
-                    deps = [tuple(d.split(":")) for d in dep_str if d != ""]
-                    for dep in deps:
-                        if len(dep)!=2:
-                            raise InvalidSubsectionException(dep)
-                else:
-                    deps = []
-                for node in deps:
-                    edges.add((node, thisnode))
+        incomplete_edges = set()
+        nodes = set()
         
-        for edge in edges:
-            if not edge[0] in DG: # edge[1] is thisnode and we have it in the configuration file for sure
-                raise InvalidDependencyException("%s:%s in section %s:%s" % (edge[0][0], edge[0][1], edge[1][0], edge[1][1]))
-            else:
-                DG.add_edge(*edge)
-        return DG
+        def fullname(section):
+            tmp = section.name
+            namelist = []
+            while True:
+                if section.name is None:
+                    break
+                else:
+                    namelist.append(section.name)
+                    section = section.parent
+            return ":".join(reversed(namelist))        
 
+        def resolve_dep(thisection, dep):
+            if ":" in dep or dep == "ALL":
+                return dep
+            elif thisection.name is None and dep in thisection:
+                return dep
+            elif thisection.name is None:
+                raise Exception("Unable to resolve dependency %s" % dep)
+            elif dep in thisection.sections:
+                return fullname(thisection) + ":" + dep
+            else:
+                return resolve_dep(thisection.parent, dep)
+                
+        def __recursive_walk(thisection):
+            section_name = fullname(thisection)
+            if section_name != "INIT" and section_name!="":
+                edges.add(("INIT", section_name))
+            if thisection.has_key("handler"):
+                self.__sections_to_stringhandlers[section_name] = thisection["handler"]
+                assert(section_name!="")
+                nodes.add(section_name)
+                if thisection.has_key("depends"):
+                    dependencies = thisection.as_list("depends")
+                    dependencies = [resolve_dep(thisection, dep) for dep in dependencies if dep!=""]
+                    for dep in dependencies:
+                        if dep=="ALL":
+                            incomplete_edges.add(section_name)
+                        else:
+                            edges.add((dep, section_name))
+            else:
+                for section in thisection.sections:
+                    if thisection.name is not None:
+                        edges.add((fullname(thisection[section]), section_name))
+                    __recursive_walk(RecursiveSection(thisection[section]))
+        
+        __recursive_walk(RecursiveSection(self.conf))
+        
+        for edge_node in incomplete_edges:
+            for node in nodes:
+                if node != edge_node:
+                    edges.add((node, edge_node))
+        
+        DG.add_nodes_from(nodes)
+        DG.add_edges_from(edges)
+        return DG
+        
+        
+        
     def print_conf(self):
         #width = 30
         #headerstring = "Configuration"
@@ -126,32 +186,20 @@ class Engine():
                 print indentation, section, "=", config[section]
     
     def execute_all(self):
-        for section, subsection in self.run_order:
-            self.__execute_subsection(section, subsection)
-
-    def execute_section(self, section_name):
-        done = False
-        for section, subsection in self.run_order:
-            if section == section_name:
-                done = True
-                self.__execute_subsection(section, subsection)
-        if not done:
-            raise HandlerNotFoundException(section_name)
+        for section in self.run_order:
+            if section in self.__sections_to_stringhandlers:
+                self.__execute_subsection(section)
     
-    def execute_subsection(self, subsection_full_name):
-        try:
-            section, subsection = subsection_full_name.split(":")
-        except ValueError, e:
-            raise InvalidSubsectionException(subsection_full_name)
-        self.__execute_subsection(section, subsection)
-    
-    def __execute_subsection(self, section, subsection):
-        handler = self.__get_handler(section)
-        if not self.conf[section].has_key(subsection): # I'm sure that conf[section] exists, otherwise __get_handler would have thrown an exeception
-            raise InvalidSubsectionException("%s:%s" % (section, subsection))
-        conf = self.conf[section][subsection]
-        print "Executing [%s:%s]" % (section, subsection)
-        handler.execute(subsection, conf)
+    def __execute_subsection(self, section):
+        handler = self.__get_handler(self.__sections_to_stringhandlers[section])
+        conf = self.conf
+        for s in section.split(":"):
+            conf = conf[s]
+        print "Executing [%s]" % (section)
+        if self.dry_run:
+            print "DryRun handler.execute(%s, conf)" % section
+        else:
+            handler.execute(section, RecursiveSection(conf))
 
     def __get_handler(self, section_name):
         if self.__handlers__.has_key(section_name):
@@ -166,4 +214,7 @@ class Engine():
         else:
             raise HandlerAlreadyDefinedException(handler.section_name)
 
-            
+
+if __name__ == '__main__':
+    e = Engine("config-example.ini")
+    print e.DG

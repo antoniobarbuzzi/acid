@@ -9,8 +9,8 @@ import abstracthandler
 from fabric_libs.fab_utils import adduser
 
 class UserHandler(abstracthandler.AbstractHandler):
-    def __init__(self, verbose=False, dry_run=False):
-        abstracthandler.AbstractHandler.__init__(self, section_name="USERS", verbose=verbose, dry_run=dry_run)
+    def __init__(self, verbose=False):
+        abstracthandler.AbstractHandler.__init__(self, section_name="USERS", verbose=verbose)
     
     def validate_conf(self, name, confsection):
         user=confsection["user"]
@@ -26,5 +26,4 @@ class UserHandler(abstracthandler.AbstractHandler):
         home=confsection["home"]
         gecos=confsection["gecos"]
         shell=confsection["shell"]
-        if not self.dry_run:
-            adduser(user, password, home, gecos, shell)
+        adduser(user, password, home, gecos, shell)

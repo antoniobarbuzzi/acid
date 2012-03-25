@@ -4,6 +4,7 @@ from __future__ import with_statement
 from fabric.api import *
 from fabric.utils import warn
 from fabric.contrib.files import exists
+import fabric
 
 import paramiko
 import socket
@@ -61,7 +62,7 @@ class hostUp(object):
         
     def __call__(self, *args, **kwargs):
         if self.is_host_up(env.host, int(env.port)) is False:
-            warn('Host {host} on port {port} is down - Not calling "{func}" for it'.format(host=env.host, port=env.port, func=self.f.__name__))
+            warn('Host {host} on port {port} is down - Not calling "{func}" for it'.format(host=fabric.state.env.host, port=fabric.state.env.port, func=self.name))
             self.unreachable_machines.append((env.host, env.port))
         else:
             self.f(*args, **kwargs)
