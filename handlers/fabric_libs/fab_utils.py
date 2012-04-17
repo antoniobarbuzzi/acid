@@ -27,11 +27,12 @@ def adduser(username, password=None, home=None, gecos=None, shell="/bin/bash"):
         home="/home/%s" % username
     if not gecos:
         gecos="User %s" % username
-    if mayfailrun("getent passwd {username}".format(username=username)).failed:
-        cmd = 'adduser --disabled-password --home {home} --gecos "{gecos}" --shell {shell} {username}'.format(home=home, gecos=gecos, shell=shell, username=username)
-        run(cmd)
-        if password:
-            run('echo "{username}:{password}" | chpasswd'.format(username=username, password=password))
+    with settings(user="root"):
+        if mayfailrun("getent passwd {username}".format(username=username)).failed:
+            cmd = 'adduser --disabled-password --home {home} --gecos "{gecos}" --shell {shell} {username}'.format(home=home, gecos=gecos, shell=shell, username=username)
+            run(cmd)
+            if password:
+                run('echo "{username}:{password}" | chpasswd'.format(username=username, password=password))
 
 def aptkey(keyID, localFilename):
     if mayfailrun("apt-key list | grep  -q {keyID}".format(keyID=keyID)).failed:
